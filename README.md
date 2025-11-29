@@ -4,8 +4,8 @@ This repository contains the code for our project on **automated liver steatosis
 
 The pipeline combines:
 
-- **TRIDENT** for scalable WSI processing and patch-level feature extraction (CONCH v1.5). :contentReference[oaicite:0]{index=0}  
-- **TITAN** for slide-level multimodal feature analysis, zero-shot classification, and slide embeddings. :contentReference[oaicite:1]{index=1}  
+- **TRIDENT** for scalable WSI processing and patch-level feature extraction (CONCH v1.5). 
+- **TITAN** for slide-level multimodal feature analysis, zero-shot classification, and slide embeddings. 
 
 We predict whether each liver WSI has **High steatosis (>30%)** or **Low steatosis (<30%)**, and compare:
 
