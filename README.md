@@ -128,8 +128,7 @@ from huggingface_hub import login
 
 login()  # paste your HF token from https://huggingface.co/settings/tokens
 ```
-
-After this, both TRIDENT and TITAN will be able to download TITAN and CONCH v1.5 weights via `AutoModel.from_pretrained(...)` as in the TITAN README. 
+ 
 ---
 
 ## 4. Step 1 – Patch Feature Extraction (`feature_extraction.py`)
@@ -169,72 +168,106 @@ Each `.h5` file should contain:
 
 ---
 
-## 5. Step 2 – Zero-Shot Classification (`zeroshot.py`)
+### 5. Step 2 – Zero-Shot Classification (`zeroshot.py`)
 
-`zeroshot.py` loads your **patch features** and `Total_WSI.csv`, builds TITAN slide embeddings, and performs **zero-shot steatosis classification** using prompt ensembling.
+`zeroshot.py` is a **self-contained script** that uses TITAN to run zero-shot steatosis classification on all slides listed in `Total_WSI.csv`.
 
-High-level steps:
+At the top of the file there is a **configuration block**:
 
-1. Load TITAN from Hugging Face:
+```python
+# --- CONFIGURATION ---
+CSV_PATH = 'Total_WSI.csv'
+FEATURE_DIR = '../features-20251122T053023Z-1-001/features/20x_512px_0px_overlap/features_conch_v15'
+OUTPUT_CSV = 'titan_steatosis_predictions.csv'
 
-   ```python
-   from transformers import AutoModel
-   titan = AutoModel.from_pretrained("MahmoodLab/TITAN", trust_remote_code=True)
-   ```
-2. For each `.h5` feature file:
+# Label mapping and class names
+# Label 0 = High Steatosis (>30%)
+# Label 1 = Low Steatosis (<30%)
+CLASS_NAMES = ["High Steatosis (>30%)", "Low Steatosis (<30%)"]
 
-   * Load `features`, `coords`, `patch_size_lv0`
-   * Compute `z_slide = titan.encode_slide_from_patch_features(...)`
-3. Define multiple textual prompts for:
-
-   * **High Steatosis (>30%)**
-   * **Low Steatosis (<30%)**
-4. Build a zero-shot classifier from prompts
-5. Compute cosine similarity between `z_slide` and text prototypes
-6. Save predictions and metrics
-
-**Example usage:**
-
-```bash
-python zeroshot.py \
-    --features_dir /path/to/features \
-    --csv_path Total_WSI.csv \
-    --output_csv titan_zeroshot_results.csv
+# Text prompts for zero-shot classification (prompt ensemble)
+STEATOSIS_PROMPTS = {
+    "High Steatosis (>30%)": [
+        "A histology slide dominated by large white fat vacuoles.",
+        "Severe fatty change with crowded clear circular spaces.",
+        "Macrovesicular steatosis replacing more than half the tissue.",
+        "Pathology image showing abundant lipid droplets displacing nuclei.",
+        "Swiss cheese texture with very little solid pink tissue."
+    ],
+    "Low Steatosis (<30%)": [
+        "A histology slide dominated by solid pink cytoplasm.",
+        "Preserved hepatic architecture with no significant fat vacuoles.",
+        "Dense eosinophilic tissue without many white holes.",
+        "Intact parenchyma consisting of uniform hepatocytes.",
+        "Tissue showing mostly nuclei and cytoplasm, not fat."
+    ]
+}
 ```
 
-The script typically writes:
+To run zero-shot inference you only need to:
 
-* Per-slide predictions (probabilities + predicted class)
-* Summary metrics (accuracy, precision, recall, F1)
+1. Edit `CSV_PATH`, `FEATURE_DIR`, and `OUTPUT_CSV` to match your setup.
+2. Optionally edit `STEATOSIS_PROMPTS` if you want to experiment with different prompts.
+3. Run:
+
+```bash
+python zeroshot.py
+```
+
+What the script does:
+
+* Loads TITAN from Hugging Face.
+* Builds a zero-shot classifier from the prompt ensemble.
+* For each slide ID in `Total_WSI.csv`:
+
+  * Loads the corresponding `.h5` feature file from `FEATURE_DIR`.
+  * Computes the TITAN slide embedding.
+  * Applies zero-shot classification (High vs Low steatosis).
+* Prints:
+
+  * Accuracy, precision, recall, F1-score.
+  * Confusion matrix counts.
+* Saves:
+
+  * A **PNG confusion matrix** (`zeroshot_confusion_matrix.png`).
+  * A detailed **per-slide CSV** (`OUTPUT_CSV`) containing:
+
+    * `Tissue Sample ID`
+    * `True Label`
+    * `Predicted Label`
+    * `Predicted Class`
+    * `Score_High`, `Score_Low` (raw scores / logits per class).
 
 ---
 
-## 6. Step 3 – Supervised Classification (`supervised.py`)
+### 6. Step 3 – Supervised Classification (`supervised.py`)
 
-`supervised.py` trains a small **MLP classifier** on top of frozen TITAN slide embeddings to predict high vs low steatosis.
+`supervised.py` has a similar style: configuration is done via **global variables at the top of the file**, and then you simply run the script.
 
-Pipeline:
+A typical configuration block looks like:
 
-1. Load TITAN and slide embeddings (computed similarly to `zeroshot.py`)
-2. Merge embeddings with labels from `Total_WSI.csv`
-3. Train an MLP using **stratified 5-fold cross-validation**
-4. (Optionally) use **Bayesian optimization** to tune learning rate, dropout, and weight decay
-5. Report mean performance across folds and save the trained model/checkpoints
 
-**Example usage:**
+To run supervised training:
+
+1. Edit `CSV_PATH`, `FEATURE_DIR`, and `OUTPUT_DIR` to match your environment.
+2. Optionally adjust training hyperparameters (learning rate, dropout, batch size, etc.).
+3. Run:
 
 ```bash
-python supervised.py \
-    --features_dir /path/to/features \
-    --csv_path Total_WSI.csv \
-    --output_dir results/supervised
+python supervised.py
 ```
 
-Output might include:
+What the script does:
 
-* `supervised_metrics.csv` – per-fold and mean metrics
-* `best_model.pt` – trained MLP weights
-* Training curves (loss/accuracy plots)
+* Loads TITAN and computes (or loads) slide embeddings from the `.h5` feature files.
+* Joins embeddings with labels from `Total_WSI.csv`.
+* Trains an MLP classifier on frozen TITAN embeddings using **stratified K-fold cross-validation** (e.g. 5 folds).
+* Optionally runs Bayesian optimization inside the script to refine LR / dropout / weight decay.
+* Outputs:
+
+  * Console metrics per fold and the mean accuracy / precision / recall / F1.
+  * Confusion matrices and training curves (loss/accuracy plots) saved under `OUTPUT_DIR`.
+  * A CSV with per-fold metrics and, optionally, a saved model checkpoint (e.g. `best_model.pt`).
 
 ---
 
@@ -255,11 +288,10 @@ To make your experiments reproducible:
 
 If you use this repository in academic work, please cite:
 
-* **TRIDENT** – scalable WSI processing toolkit. ([TRIDENT Documentation][6])
-* **CONCH v1.5** – vision–language pathology foundation model. ([GitHub][7])
-* **TITAN** – multimodal whole-slide foundation model. ([arXiv][8])
+* **TRIDENT** – scalable WSI processing toolkit. 
+* **CONCH v1.5** – vision–language pathology foundation model. 
+* **TITAN** – multimodal whole-slide foundation model. 
 
-(And your own thesis/paper when it is published.)
 
 ---
 
@@ -267,6 +299,6 @@ If you use this repository in academic work, please cite:
 
 For questions about this code:
 
-* **Your Name(s)** – <[email@institution.edu](mailto:email@institution.edu)>
+TBD
 
 For questions about TRIDENT, CONCH, or TITAN, please refer to the official MahmoodLab repositories and documentation.
