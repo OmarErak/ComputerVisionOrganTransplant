@@ -39,6 +39,7 @@ We predict whether each liver WSI has **High steatosis (>30%)** or **Low steatos
 
 Your WSIs themselves are **not** stored in this repository; you should keep them in your own storage and point `feature_extraction.py` to that directory.
 
+Features used in this project can be found at: https://drive.google.com/drive/folders/1OSpqz3AhOmgKejD7Klx-XLPHsLc0E5Up
 ---
 
 ## Dependencies
