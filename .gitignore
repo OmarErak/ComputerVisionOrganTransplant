@@ -1,0 +1,6 @@
+*.svs
+venv/
+__pycache__/
+*.log
+TRIDENT/
+features/
