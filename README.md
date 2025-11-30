@@ -49,9 +49,9 @@ Features used in this project can be found at: https://drive.google.com/drive/fo
 ### Download & Organize GTEx WSIs
 The script `download_organize_wsi.py` automatically:
 
-* ✔ Loads the GTEx Portal.csv metadata
-* ✔ Filters slides with clear steatosis/fibrosis percentage in the pathology notes
-* ✔ Downloads the corresponding .svs whole-slide images
+* Loads the GTEx Portal.csv metadata
+* Filters slides with clear steatosis/fibrosis percentage in the pathology notes
+* Downloads the corresponding .svs whole-slide images
 
 #### Run the script
 ```
@@ -148,7 +148,7 @@ login()  # paste your HF token from https://huggingface.co/settings/tokens
  
 ---
 
-## 4. Step 1 – Patch Feature Extraction (`feature_extraction.py`)
+## 4. Step 1 – Patch Feature Extraction (`run_trident_feature_extraction.py`)
 
 This script uses **TRIDENT** to:
 
@@ -157,15 +157,31 @@ This script uses **TRIDENT** to:
 3. Extract **CONCH v1.5** patch embeddings (512×512 at 20×)
 4. Save features and coordinates to HDF5 (`.h5`) files compatible with TITAN ([GitHub][2])
 
-**Example :**
+### Before running the script:
+
+* Request access to CONCH v1.5:
+```
+🔗 https://huggingface.co/MahmoodLab/conchv1_5
+```
+
+* Generate a token:
+```
+🔗 https://huggingface.co/settings/tokens
+```
+
+* Log in via the script automatically by passing:
+```
+--hf_token "YOUR_TOKEN"
+```
+
+**Example running script:**
 
 ```bash
-python feature_extraction.py \
-    --wsi_dir /path/to/wsis \
-    --output_dir /path/to/features \
-    --patch_size 512 \
-    --magnification 20 \
-    --model_name conch_v1_5
+python run_trident_feature_extraction.py \
+    --trident_dir "./TRIDENT" \
+    --wsi_dir "./" \
+    --job_dir "./features" \
+    --hf_token "YOUR_HF_TOKEN"
 ```
 
 Typical output structure:
