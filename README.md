@@ -49,9 +49,14 @@ Features used in this project can be found at: https://drive.google.com/drive/fo
 ### Download & Organize GTEx WSIs
 The script `download_organize_wsi.py` automatically:
 
-✔ Loads the GTEx Portal.csv metadata
-✔ Filters slides with clear steatosis/fibrosis percentage in the pathology notes
-✔ Downloads the corresponding .svs whole-slide images
+* ✔ Loads the GTEx Portal.csv metadata
+* ✔ Filters slides with clear steatosis/fibrosis percentage in the pathology notes
+* ✔ Downloads the corresponding .svs whole-slide images
+
+#### Run the script
+```
+python download_organize_wsi.py
+```
 ---
 ## Dependencies
 
