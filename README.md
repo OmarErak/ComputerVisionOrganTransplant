@@ -45,7 +45,14 @@ Your WSIs themselves are **not** stored in this repository; you should keep them
 
 Features used in this project can be found at: https://drive.google.com/drive/folders/1OSpqz3AhOmgKejD7Klx-XLPHsLc0E5Up
 ---
+---
+### Download & Organize GTEx WSIs
+The script `download_organize_wsi.py` automatically:
 
+✔ Loads the GTEx Portal.csv metadata
+✔ Filters slides with clear steatosis/fibrosis percentage in the pathology notes
+✔ Downloads the corresponding .svs whole-slide images
+---
 ## Dependencies
 
 * Python ≥ 3.9
