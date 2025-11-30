@@ -18,11 +18,15 @@ We predict whether each liver WSI has **High steatosis (>30%)** or **Low steatos
 
 ```text
 .
-├── feature_extraction.py   # TRIDENT-based WSI → CONCH v1.5 patch features (.h5)
-├── zeroshot.py             # TITAN zero-shot steatosis classification
-├── supervised.py           # Supervised MLP on TITAN slide embeddings
-├── Total_WSI.csv           # Metadata: slide IDs, labels, pathology notes, etc.
+├── download_organize_wsi.py       # Download + filter GTEx WSIs + create Total_WSI.csv
+├── run_trident_feature_extraction.py   # TRIDENT: WSI → CONCH v1.5 patch features
+├── zeroshot.py                    # TITAN zero-shot steatosis classification
+├── supervised.py                  # Supervised MLP classifier on TITAN embeddings
+├── GTEx Portal.csv                # Raw pathology notes downloaded from GTEx
+├── Total_WSI.csv                  # Cleaned dataset (labels + WSI metadata)
+├── requirements.txt               # All Python dependencies
 └── README.md
+
 ````
 
 ---
